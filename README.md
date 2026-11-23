@@ -4,6 +4,9 @@ Motor Insurance Operations Analytics
 
 Project Overview
 
+<img width="1327" height="811" alt="image" src="https://github.com/user-attachments/assets/ce65b475-9673-4f03-ab1e-b080d4afbc4f" />
+
+
 This project analyzes motor insurance operations to evaluate operational performance, request completion, turnaround time (TAT), SLA compliance, process distribution, and premium performance.
 
 The objective is to transform operational data into meaningful business insights using SQL and Power BI, helping identify process bottlenecks, improve efficiency, and support data-driven decision-making.
