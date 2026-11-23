@@ -1,0 +1,479 @@
+
+-- PROJECT: MOTOR INSURANCE OPERATIONS ANALYTICS
+-- AUTHOR: ANURAG KUMAR
+-- TOOL: MYSQL WORKBENCH
+
+Use insurance_operations;
+
+Select * from insurance_operations;
+
+
+-- Q1. Display the first 10 records
+SELECT *
+FROM insurance_operations
+LIMIT 10;
+
+
+-- Q2. Count total requests
+SELECT COUNT(*) AS total_requests
+FROM insurance_operations;
+
+
+-- Q3. Count unique policies
+SELECT COUNT(DISTINCT Policy_ID) AS unique_policies
+FROM insurance_operations;
+
+
+-- Q4. Find all request types
+SELECT DISTINCT Request_Type
+FROM insurance_operations;
+
+
+-- Q5. Find all request statuses
+SELECT DISTINCT Request_Status
+FROM insurance_operations;
+
+
+-- Q6. Find all sales channels
+SELECT DISTINCT Sales_Channel
+FROM insurance_operations;
+
+
+-- Q7. Find all vehicle types
+SELECT DISTINCT Vehicle_Type
+FROM insurance_operations;
+
+
+-- Q8. Find all pending requests
+SELECT *
+FROM insurance_operations
+WHERE Request_Status = 'Pending';
+
+
+-- Q9. Find all SLA-breached requests
+SELECT *
+FROM insurance_operations
+WHERE SLA_Breached = 'Yes';
+
+
+-- Q10. Find all high-priority requests
+SELECT *
+FROM insurance_operations
+WHERE Priority = 'High';
+
+
+-- Q11. Count requests by request type
+SELECT
+    Request_Type,
+    COUNT(*) AS total_requests
+FROM insurance_operations
+GROUP BY Request_Type;
+
+
+-- Q12. Count requests by status
+SELECT
+    Request_Status,
+    COUNT(*) AS total_requests
+FROM insurance_operations
+GROUP BY Request_Status;
+
+
+-- Q13. Total, completed, pending, rejected and cancelled requests
+SELECT
+    COUNT(*) AS total_requests,
+    SUM(CASE WHEN Request_Status IN ('Issued', 'Completed') THEN 1 ELSE 0 END) AS completed_requests,
+    SUM(CASE WHEN Request_Status = 'Pending' THEN 1 ELSE 0 END) AS pending_requests,
+    SUM(CASE WHEN Request_Status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_requests,
+    SUM(CASE WHEN Request_Status = 'Cancelled' THEN 1 ELSE 0 END) AS cancelled_requests
+FROM insurance_operations;
+
+
+-- Q14. Calculate completion rate
+SELECT
+    COUNT(*) AS total_requests,
+    SUM(CASE WHEN Request_Status IN ('Issued', 'Completed') THEN 1 ELSE 0 END) AS completed_requests,
+    ROUND(
+        SUM(CASE WHEN Request_Status IN ('Issued', 'Completed') THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS completion_rate_percentage
+FROM insurance_operations;
+
+
+-- Q15. Calculate pending request percentage
+SELECT
+    COUNT(*) AS total_requests,
+    SUM(CASE WHEN Request_Status = 'Pending' THEN 1 ELSE 0 END) AS pending_requests,
+    ROUND(
+        SUM(CASE WHEN Request_Status = 'Pending' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS pending_percentage
+FROM insurance_operations;
+
+
+-- Q16. Calculate total SLA breaches
+SELECT
+    COUNT(*) AS total_sla_breaches
+FROM insurance_operations
+WHERE SLA_Breached = 'Yes';
+
+
+-- Q17. Calculate overall SLA breach percentage
+SELECT
+    COUNT(*) AS total_requests,
+    SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) AS breached_requests,
+    ROUND(
+        SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS sla_breach_percentage
+FROM insurance_operations;
+
+
+-- Q18. Calculate SLA breach rate by request type
+SELECT
+    Request_Type,
+    COUNT(*) AS total_requests,
+    SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) AS breached_requests,
+    ROUND(
+        SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS breach_percentage
+FROM insurance_operations
+GROUP BY Request_Type
+ORDER BY breach_percentage DESC;
+
+
+-- Q19. Calculate SLA breach rate by team
+SELECT
+    Assigned_Team,
+    COUNT(*) AS total_requests,
+    SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) AS breached_requests,
+    ROUND(
+        SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS breach_percentage
+FROM insurance_operations
+GROUP BY Assigned_Team
+ORDER BY breach_percentage DESC;
+
+
+-- Q20. Find teams with SLA breach rate above 20%
+SELECT
+    Assigned_Team,
+    COUNT(*) AS total_requests,
+    SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) AS breached_requests,
+    ROUND(
+        SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS breach_percentage
+FROM insurance_operations
+GROUP BY Assigned_Team
+HAVING breach_percentage > 20
+ORDER BY breach_percentage DESC;
+
+
+-- Q21. Average processing TAT by request type
+SELECT
+    Request_Type,
+    ROUND(AVG(Processing_TAT_Hours), 2) AS average_tat_hours
+FROM insurance_operations
+GROUP BY Request_Type
+ORDER BY average_tat_hours DESC;
+
+
+-- Q22. Average processing TAT by team
+SELECT
+    Assigned_Team,
+    ROUND(AVG(Processing_TAT_Hours), 2) AS average_tat_hours
+FROM insurance_operations
+GROUP BY Assigned_Team
+ORDER BY average_tat_hours DESC;
+
+
+-- Q23. Average TAT by priority
+SELECT
+    Priority,
+    ROUND(AVG(Processing_TAT_Hours), 2) AS average_tat_hours
+FROM insurance_operations
+GROUP BY Priority
+ORDER BY average_tat_hours DESC;
+
+
+-- Q24. Find requests where processing TAT exceeded SLA
+SELECT
+    Request_ID,
+    Request_Type,
+    Assigned_Team,
+    Processing_TAT_Hours,
+    SLA_Hours
+FROM insurance_operations
+WHERE Processing_TAT_Hours > SLA_Hours
+ORDER BY Processing_TAT_Hours DESC;
+
+
+-- Q25. Average TAT for completed requests
+SELECT
+    Request_Type,
+    ROUND(AVG(Processing_TAT_Hours), 2) AS average_completed_tat
+FROM insurance_operations
+WHERE Request_Status IN ('Issued', 'Completed')
+GROUP BY Request_Type
+ORDER BY average_completed_tat DESC;
+
+
+-- Q26. Count total policy issuance requests
+SELECT
+    COUNT(*) AS total_issuance_requests
+FROM insurance_operations
+WHERE Request_Type = 'Policy Issuance';
+
+
+-- Q27. Policy issuance status distribution
+SELECT
+    Request_Status,
+    COUNT(*) AS total_requests
+FROM insurance_operations
+WHERE Request_Type = 'Policy Issuance'
+GROUP BY Request_Status;
+
+
+-- Q28. Calculate policy issuance completion rate
+SELECT
+    COUNT(*) AS total_issuance_requests,
+    SUM(CASE WHEN Request_Status = 'Issued' THEN 1 ELSE 0 END) AS issued_policies,
+    ROUND(
+        SUM(CASE WHEN Request_Status = 'Issued' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS issuance_rate_percentage
+FROM insurance_operations
+WHERE Request_Type = 'Policy Issuance';
+
+
+-- Q29. Average issuance TAT by sales channel
+SELECT
+    Sales_Channel,
+    ROUND(AVG(Processing_TAT_Hours), 2) AS average_issuance_tat
+FROM insurance_operations
+WHERE Request_Type = 'Policy Issuance'
+GROUP BY Sales_Channel
+ORDER BY average_issuance_tat DESC;
+
+
+-- Q30. Issuance SLA breach rate by sales channel
+SELECT
+    Sales_Channel,
+    COUNT(*) AS total_requests,
+    SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) AS breached_requests,
+    ROUND(
+        SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS breach_percentage
+FROM insurance_operations
+WHERE Request_Type = 'Policy Issuance'
+GROUP BY Sales_Channel
+ORDER BY breach_percentage DESC;
+
+
+-- Q31. Count inspection-required and non-inspection-required requests
+SELECT
+    Inspection_Required,
+    COUNT(*) AS total_requests
+FROM insurance_operations
+GROUP BY Inspection_Required;
+
+
+-- Q32. Inspection status distribution
+SELECT
+    Inspection_Status,
+    COUNT(*) AS total_inspections
+FROM insurance_operations
+WHERE Inspection_Required = 'Yes'
+GROUP BY Inspection_Status;
+
+
+-- Q33. Calculate inspection completion rate
+SELECT
+    COUNT(*) AS total_inspection_requests,
+    SUM(CASE WHEN Inspection_Status = 'Completed' THEN 1 ELSE 0 END) AS completed_inspections,
+    ROUND(
+        SUM(CASE WHEN Inspection_Status = 'Completed' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS inspection_completion_percentage
+FROM insurance_operations
+WHERE Inspection_Required = 'Yes';
+
+
+-- Q34. Inspection pass and fail distribution
+SELECT
+    Inspection_Result,
+    COUNT(*) AS total_inspections
+FROM insurance_operations
+WHERE Inspection_Status = 'Completed'
+GROUP BY Inspection_Result;
+
+
+-- Q35. Average inspection TAT by vehicle type
+SELECT
+    Vehicle_Type,
+    ROUND(AVG(Inspection_TAT_Hours), 2) AS average_inspection_tat
+FROM insurance_operations
+WHERE Inspection_Status = 'Completed'
+GROUP BY Vehicle_Type
+ORDER BY average_inspection_tat DESC;
+
+
+-- Q36. Endorsement volume by endorsement type
+SELECT
+    Endorsement_Type,
+    COUNT(*) AS total_endorsements
+FROM insurance_operations
+WHERE Request_Type = 'Endorsement'
+GROUP BY Endorsement_Type
+ORDER BY total_endorsements DESC;
+
+
+-- Q37. Endorsement status distribution
+SELECT
+    Endorsement_Status,
+    COUNT(*) AS total_endorsements
+FROM insurance_operations
+WHERE Request_Type = 'Endorsement'
+GROUP BY Endorsement_Status;
+
+
+-- Q38. Average endorsement TAT by endorsement type
+SELECT
+    Endorsement_Type,
+    ROUND(AVG(Endorsement_TAT_Hours), 2) AS average_endorsement_tat
+FROM insurance_operations
+WHERE Endorsement_Status = 'Completed'
+GROUP BY Endorsement_Type
+ORDER BY average_endorsement_tat DESC;
+
+
+-- Q39. Calculate endorsement completion rate
+SELECT
+    COUNT(*) AS total_endorsements,
+    SUM(CASE WHEN Endorsement_Status = 'Completed' THEN 1 ELSE 0 END) AS completed_endorsements,
+    ROUND(
+        SUM(CASE WHEN Endorsement_Status = 'Completed' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS completion_percentage
+FROM insurance_operations
+WHERE Request_Type = 'Endorsement';
+
+
+-- Q40. Endorsement SLA breach rate by endorsement type
+SELECT
+    Endorsement_Type,
+    COUNT(*) AS total_endorsements,
+    SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) AS breached_endorsements,
+    ROUND(
+        SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS breach_percentage
+FROM insurance_operations
+WHERE Request_Type = 'Endorsement'
+GROUP BY Endorsement_Type
+ORDER BY breach_percentage DESC;
+
+
+-- Q41. Total requests handled by each employee
+SELECT
+    Processed_By,
+    COUNT(*) AS total_requests_handled
+FROM insurance_operations
+GROUP BY Processed_By
+ORDER BY total_requests_handled DESC;
+
+
+-- Q42. Completed requests handled by each employee
+SELECT
+    Processed_By,
+    COUNT(*) AS completed_requests
+FROM insurance_operations
+WHERE Request_Status IN ('Issued', 'Completed')
+GROUP BY Processed_By
+ORDER BY completed_requests DESC;
+
+
+-- Q43. Average processing TAT by employee
+SELECT
+    Processed_By,
+    ROUND(AVG(Processing_TAT_Hours), 2) AS average_tat_hours
+FROM insurance_operations
+GROUP BY Processed_By
+ORDER BY average_tat_hours ASC;
+
+
+-- Q44. SLA breach rate by employee
+SELECT
+    Processed_By,
+    COUNT(*) AS total_requests,
+    SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) AS breached_requests,
+    ROUND(
+        SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS breach_percentage
+FROM insurance_operations
+GROUP BY Processed_By
+ORDER BY breach_percentage DESC;
+
+
+-- Q45. Find employees handling more than 50 requests
+SELECT
+    Processed_By,
+    COUNT(*) AS total_requests_handled
+FROM insurance_operations
+GROUP BY Processed_By
+HAVING COUNT(*) > 50
+ORDER BY total_requests_handled DESC;
+
+
+-- Q46. Request volume by sales channel
+SELECT
+    Sales_Channel,
+    COUNT(*) AS total_requests
+FROM insurance_operations
+GROUP BY Sales_Channel
+ORDER BY total_requests DESC;
+
+
+-- Q47. Average processing TAT by sales channel
+SELECT
+    Sales_Channel,
+    ROUND(AVG(Processing_TAT_Hours), 2) AS average_tat_hours
+FROM insurance_operations
+GROUP BY Sales_Channel
+ORDER BY average_tat_hours DESC;
+
+
+-- Q48. Total premium by business type
+SELECT
+    Business_Type,
+    ROUND(SUM(Premium_Amount), 2) AS total_premium
+FROM insurance_operations
+GROUP BY Business_Type
+ORDER BY total_premium DESC;
+
+
+-- Q49. Monthly request volume
+SELECT
+    Request_Month,
+    COUNT(*) AS total_requests
+FROM insurance_operations
+GROUP BY Request_Month
+ORDER BY Request_Month;
+
+
+-- Q50. Monthly SLA breach percentage
+SELECT
+    Request_Month,
+    COUNT(*) AS total_requests,
+    SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) AS breached_requests,
+    ROUND(
+        SUM(CASE WHEN SLA_Breached = 'Yes' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        2
+    ) AS sla_breach_percentage
+FROM insurance_operations
+GROUP BY Request_Month
+ORDER BY Request_Month;
